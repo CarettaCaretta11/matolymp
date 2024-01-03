@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+{% block content %}
+
+    {# Submission block #}
+
+    {# Load HTMX and set title #}
+    <head>
+      <script src="https://cdn.jsdelivr.net/npm/htmx.org/dist/htmx.min.js"></script>
+      <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+      <link rel="stylesheet" href="{% static "css/style.css" %}">
+      <title>Post</title>
+    </head>
+
+    <article class="media content-section" style="max-width: 800px;">
+        <div style="position: relative">
+            <div class="media-body">
+              <div class="article-metadata">
+                <a class="mr-2" href="{% url '' %}">{{ submission.author_name }}</a>
+                <small class="text-muted">{{ submission.timestamp|date:"F d, Y" }}</small>
+                {% if submission.author == user %}
+                  <div>
+{#                    <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'post-update' submission.id %}">Update</a>#}
+                    <a class="btn btn-secondary btn-sm mt-1 mb-1" href="#">Update</a>
+{#                    <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'post-delete' submission.id %}">Delete</a>#}
+                    <a class="btn btn-danger btn-sm mt-1 mb-1" href="#">Delete</a>
+                  </div>
+                {% endif %}
+              </div>
+              <h2 class="article-title">{{ submission.title }}</h2>
+
+              <div class="article-content">
+                  {{ submission.content|safe|linebreaksbr }}
+              </div>
+            </div>
+        </div>
+    </article>
+
+
+    {# New comment #}
+
+    <form id="commentForm" class="form-horizontal" action="/blog/post/comment/" data-parent-type="submission" data-parent-id="{{ submission.id }}"
+    style="max-width: 800px;">
+      <fieldset>
+
+          <div class="form-group comment-group">
+              <label for="commentContent" class="col-lg-2 control-label">New comment</label>
+
+              <div class="col-lg-10">
+                  <textarea class="form-control" rows="3" id="commentContent"></textarea>
+                  <span id="postResponse" class="text-success" style="display: none"></span>
+              </div>
+          </div>
+
+          <div class="form-group">
+              <div class="col-lg-10 col-lg-offset-2">
+                  <button type="submit" class="btn btn-primary">Submit</button>
+              </div>
+          </div>
+
+      </fieldset>
+    </form>
+
+    <style>
+      /* Adjustments for comments section and form */
+
+      .form-horizontal .form-group {
+          margin-bottom: 15px;
+      }
+
+      .comment-group {
+          margin-bottom: 0; /* Remove extra margin */
+      }
+
+      .comments-section {
+          margin-top: 20px; /* Add space between form and comments */
+      }
+    </style>
+
+    {# Comments block #}
+    <div class="comments-section" id="commentsSection">
+        {% include 'comment.html' %}
+    </div>
+
+{% endblock %}
