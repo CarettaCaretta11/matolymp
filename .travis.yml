@@ -4,7 +4,7 @@ python:
   - "3.11"
 before_script:
   - pip install -r requirements.txt
-  - python pytest_config.py
+  - python pytest_configure.py
 script:
   - pytest
 env:
