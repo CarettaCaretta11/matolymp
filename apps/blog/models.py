@@ -7,16 +7,9 @@ from .utils.model_utils import ContentTypeAware, MttpContentTypeAware
 from apps.user.models import User
 
 
-class Submission(ContentTypeAware):
-    _author_name = None
-    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    title = models.CharField(max_length=250)
-    content = models.TextField(max_length=5000, blank=True)
-    ups = models.IntegerField(default=0)
-    downs = models.IntegerField(default=0)
-    score = models.IntegerField(default=0)
-    timestamp = models.DateTimeField(default=timezone.now)
-    comment_count = models.IntegerField(default=0)
+class AuthornameField:
+    def __init__(self):
+        self._author_name = None
 
     @property
     def author_name(self):
@@ -32,7 +25,19 @@ class Submission(ContentTypeAware):
 
     @author_name.deleter
     def author_name(self):
-        del self.author_name
+        del self._author_name
+
+
+class Submission(ContentTypeAware, AuthornameField):
+    _author_name = None
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    title = models.CharField(max_length=250)
+    content = models.TextField(max_length=5000, blank=True)
+    ups = models.IntegerField(default=0)
+    downs = models.IntegerField(default=0)
+    score = models.IntegerField(default=0)
+    timestamp = models.DateTimeField(default=timezone.now)
+    comment_count = models.IntegerField(default=0)
 
     @property
     def comments_url(self):
@@ -42,8 +47,7 @@ class Submission(ContentTypeAware):
         return "<Submission:{}>".format(self.id)
 
 
-class Comment(MttpContentTypeAware):
-    author_name = models.CharField(null=False, max_length=12)
+class Comment(MttpContentTypeAware, AuthornameField):
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
     parent = TreeForeignKey(

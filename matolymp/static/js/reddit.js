@@ -124,11 +124,6 @@ function submitEvent(event, form) {
 
     doPost.done(function (response) {
         location.reload();
-        // let errorLabel = $form.find("span#postResponse");
-        // if (response.msg) {
-        //     errorLabel.text(response.msg);
-        //     errorLabel.removeAttr('style');
-        // }
     });
 }
 
@@ -138,7 +133,8 @@ $("#commentForm").submit(function (event) {
 
 let newCommentForm = '<form id="commentForm" class="form-horizontal"\
                             action="/blog/post/comment/"\
-                            data-parent-type="comment">\
+                            data-parent-type="comment"\
+                            style="max-width: 800px;">\
                             <fieldset>\
                             <div class="form-group comment-group">\
                                 <label for="commentContent" class="col-lg-2 control-label">New comment</label>\
@@ -155,10 +151,9 @@ let newCommentForm = '<form id="commentForm" class="form-horizontal"\
                         </fieldset>\
                     </form>';
 
-
 $('a[name="replyButton"]').click(function () {
     let $mediaBody = $(this).parent().parent().parent();
-    if ($mediaBody.find('#commentForm').length == 0) {
+    if ($mediaBody.find('#commentForm').length === 0) {
         $mediaBody.parent().find(".reply-container:first").append(newCommentForm);
         let $form = $mediaBody.find('#commentForm');
         $form.data('parent-id', $mediaBody.parent().data().parentId);

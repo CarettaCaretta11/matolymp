@@ -54,7 +54,7 @@
                   {% endif %}
                 <a class="nav-item nav-link" href="{% url 'apps.user:user_profile' %}">Profile</a>
                 <div>
-                  <form id="logoutForm" action="/logout/" method="post">
+                  <form id="logoutForm" action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
                     <input type="hidden" name="current_page" value="{{ request.path }}">
                   </form>

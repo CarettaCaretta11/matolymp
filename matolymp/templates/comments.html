@@ -18,7 +18,11 @@
         <div style="position: relative">
             <div class="media-body">
               <div class="article-metadata">
-                <a class="mr-2" href="{% url '' %}">{{ submission.author_name }}</a>
+                <a class="mr-2"
+                   {% if submission.author %}href="{% url 'apps.user:user_profile' submission.author.username %}"
+                   {% else %}href="#"{% endif %}>
+                  {{ submission.author_name }}
+                </a>
                 <small class="text-muted">{{ submission.timestamp|date:"F d, Y" }}</small>
                 {% if submission.author == user %}
                   <div>
@@ -41,8 +45,8 @@
 
     {# New comment #}
 
-    <form id="commentForm" class="form-horizontal" action="/blog/post/comment/" data-parent-type="submission" data-parent-id="{{ submission.id }}"
-    style="max-width: 800px;">
+    <form id="commentForm" class="form-horizontal" action="{% url 'apps.blog:post_comment' %}"
+          data-parent-type="submission" data-parent-id="{{ submission.id }}" style="max-width: 800px;">
       <fieldset>
 
           <div class="form-group comment-group">

@@ -331,6 +331,9 @@ matolymp/media/
 matolymp/templates/account
 matolymp/templates/pages
 matolymp/templates/users
+matolymp/templates/base_.html
+matolymp/templates/navbar.html
+matolymp/templates/footer.html
 
 .pytest_cache/
 .env
