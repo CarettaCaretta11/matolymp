@@ -7,8 +7,9 @@ before_script:
 script:
   - pytest
 env:
-  - DJANGO_SETTINGS_MODULE="config.settings.local"
-  - DJANGO_SECRET_KEY=x0S6X8nZVjT7aR15cL5uy896bxI2ZOsks9G9nj7aSznGP1zOQU9rj7It4ZDp7VaZ
-  - DJANGO_ADMIN_URL=nP2cFHKVThCps7o2N8OH8kpYjhJGSTjm/
-  - DJANGO_ALLOWED_HOSTS=.matolymp.az
-  - POSTGRES_URL=postgres://postgres:postgres@localhost:5432/postgres
+  global:
+    - DJANGO_SETTINGS_MODULE="config.settings.local"
+    - DJANGO_SECRET_KEY=x0S6X8nZVjT7aR15cL5uy896bxI2ZOsks9G9nj7aSznGP1zOQU9rj7It4ZDp7VaZ
+    - DJANGO_ADMIN_URL=nP2cFHKVThCps7o2N8OH8kpYjhJGSTjm/
+    - DJANGO_ALLOWED_HOSTS=.matolymp.az
+    - POSTGRES_URL=postgres://postgres:postgres@localhost:5432/postgres
