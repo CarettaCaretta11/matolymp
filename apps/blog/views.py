@@ -16,7 +16,8 @@ from apps.user.models import User
 def get_item(dictionary, key):  # pragma: no cover
     """
     Needed because there's no built-in .get in django templates
-    when working with dictionaries.
+    when working with dictionaries. Used for getting values from
+    comment_votes dictionary in comment.html template.
 
     :param dictionary: python dictionary
     :param key: valid dictionary key type
@@ -233,7 +234,7 @@ def vote(request):
     return JsonResponse({"error": None, "voteDiff": vote_diff})
 
 
-@login_required
+@login_required(login_url="/login")
 def submit(request):
     """
     Handles new submission.

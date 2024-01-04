@@ -60,11 +60,11 @@ function vote(voteButton) {
                 $upvoteArrow = $voteDiv.children("div").children('i.fa.fa-chevron-up');
                 $downArrow = $voteDiv.children("div").children('i.fa.fa-chevron-down');
             } else if ($data.whatType === 'comment') {
-                let $medaiDiv = $voteDiv.parent().parent();
-                let $votes = $medaiDiv.children('div.media-left').children('div.vote').children('div');
+                // let $medaiDiv = $voteDiv.parent().parent();
+                let $votes = $voteDiv.children('div');
                 $upvoteArrow = $votes.children('i.fa.fa-chevron-up');
                 $downArrow = $votes.children('i.fa.fa-chevron-down');
-                $score = $medaiDiv.find('div.media-body:first').find("a.score:first");
+                $score = $voteDiv.find("a.score:first");
 
             }
 
@@ -116,15 +116,17 @@ function submitEvent(event, form) {
         }
     });
 
-    let doPost = $.post(url, {
-        parentType: data.parentType,
-        parentId: data.parentId,
-        commentContent: commentContent
-    });
 
-    doPost.done(function (response) {
-        location.reload();
-    });
+    if (commentContent.trim().length > 0) {
+        let doPost = $.post(url, {
+            parentType: data.parentType,
+            parentId: data.parentId,
+            commentContent: commentContent
+        });
+        doPost.done(function (response) {
+            location.reload();
+        });
+    }
 }
 
 $("#commentForm").submit(function (event) {

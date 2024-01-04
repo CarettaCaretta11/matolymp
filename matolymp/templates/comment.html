@@ -11,21 +11,21 @@
                     <div><i class="fa fa-chevron-up {% if vote_value == 1 %} upvoted {% endif %}"
                             title="upvote" onclick="vote(this)"></i>
                     </div>
+                      <a class="score"> {{ node.score }}</a>
                     <div><i class="fa fa-chevron-down {% if vote_value == -1 %} downvoted {% endif %}"
                             title="downvote"
                             onclick="vote(this)"></i></div>
                 {% endwith %}
             </div>
         </div>
-        <div class="media-body"
+        <div class="media-body" style="margin-top: 14px"
              data-parent-id="{{ node.id }}"
              data-parent-type="comment">
-            <h5 class="media-heading">
+            <h6 class="media-heading">
               <a {% if node.author %}href="{% url 'apps.user:user_profile' node.author_name %}"
                {% else %}href="#"{% endif %}>
-                {{ node.author_name }}</a>
-                <a class="score"> {{ node.score }}</a> points posted {{ node.timestamp|naturaltime }}</h5>
-            {{ node.content | safe }}
+                {{ node.author_name }}</a> {{ node.timestamp|naturaltime }}</h6>
+            <h5>{{ node.content | safe }}</h5>
             <div class="reply-container">
                 <ul class="buttons">
                     <li><a href="javascript:void(0)" name="replyButton">reply</a></li>

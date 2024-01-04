@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="{% static "css/reddit.css" %}">
     <link rel="stylesheet" href="{% static "css/font-awesome.min.css" %}">
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -33,7 +32,7 @@
 <script src="https://cdn.jsdelivr.net/npm/htmx.org/dist/htmx.min.js"></script>
 </head>
 
-<body>
+<body style="overflow-x: hidden;">
     <header class="site-header">
       <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container">
@@ -70,7 +69,7 @@
         </div>
       </nav>
     </header>
-    <main role="main" class="container" style="padding-top: 50px;">
+    <main role="main" class="container" style="padding-top: 50px">
       <div class="row">
         <div class="col-md-8">
           {% if messages %}
@@ -86,14 +85,13 @@
         <div class="col-md-4">
           <div class="content-section">
             <h3>Our Sidebar</h3>
-            <p class='text-muted'>You can put any information here you'd like.
+            <p class='text-muted'>You can put any information here you'd like.</p>
               <ul class="list-group">
                 <li class="list-group-item list-group-item-light">Latest Posts</li>
                 <li class="list-group-item list-group-item-light">Announcements</li>
                 <li class="list-group-item list-group-item-light">Calendars</li>
                 <li class="list-group-item list-group-item-light">etc</li>
               </ul>
-            </p>
           </div>
         </div>
       </div>
