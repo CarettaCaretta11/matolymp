@@ -1,7 +1,6 @@
 """
 Tests for the User app.
 """
-from django import setup
 from django.test import TestCase, Client
 from django.contrib.auth import authenticate, get_user_model
 from django.urls import reverse
@@ -10,9 +9,6 @@ from apps.user.forms import UserForm
 from apps.user.models import User
 
 import pytest
-
-
-setup()
 
 
 @pytest.fixture
