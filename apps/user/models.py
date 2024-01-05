@@ -14,8 +14,7 @@ class User(AbstractUser):
     )
     username = models.CharField(max_length=20, unique=True, validators=[username_validator])
     about_text = models.TextField(blank=True, null=True, max_length=500, default=None)
-    post_karma = models.IntegerField(default=0)  # how useful are this user's posts?
-    comment_karma = models.IntegerField(default=0)  # how useful are this user's comments?
+    karma = models.IntegerField(default=0)  # how useful are this user's comments?
 
     REQUIRED_FIELDS = ["email"]
 

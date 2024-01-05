@@ -16,3 +16,7 @@ import pytest
 def client():
     return Client()
 
+
+@pytest.django_db
+class TestSubmissionModel(TestCase):
+    pass
