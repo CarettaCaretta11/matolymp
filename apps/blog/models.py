@@ -46,7 +46,7 @@ class Submission(ContentTypeAware, AuthornameField):
 
 class Comment(MttpContentTypeAware, AuthornameField):
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, null=True)
     parent = TreeForeignKey(
         "self", on_delete=models.SET_NULL, related_name="children", null=True, blank=True, db_index=True
     )
@@ -67,8 +67,8 @@ class Comment(MttpContentTypeAware, AuthornameField):
         If parent is comment post it as child comment
         :param author: User instance
         :type author: User
-        :param raw_comment: Raw comment text
-        :type raw_comment: str
+        :param content: Raw comment text
+        :type content: str
         :param parent: Comment or Submission that this comment is child of
         :type parent: Comment | Submission
         :return: New Comment instance
@@ -97,8 +97,8 @@ class Comment(MttpContentTypeAware, AuthornameField):
 
 class Vote(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)  # who voted
-    submission = models.ForeignKey(Submission, on_delete=models.CASCADE)  # under which submission
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)  # which comment
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, null=True)  # under which submission
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True)  # which comment
     value = models.IntegerField(default=0)  # 0, 1 or -1 ( 0 if no vote or cancelled vote )
 
     @classmethod
@@ -134,6 +134,7 @@ class Vote(models.Model):
 
         return vote
 
+
     def change_vote(self, new_vote_value):
         if self.value == -1 and new_vote_value == 1:  # down to up
             vote_diff = 2
@@ -156,7 +157,7 @@ class Vote(models.Model):
         else:
             return None
 
-        self.comment.author.comment_karma += vote_diff
+        self.comment.author.karma += vote_diff
         self.value = new_vote_value
         self.comment.save()
         self.comment.author.save()
@@ -176,7 +177,7 @@ class Vote(models.Model):
         else:
             return None
 
-        self.comment.author.comment_karma += vote_diff
+        self.comment.author.karma += vote_diff
         self.value = 0
         self.save()
         self.comment.save()

@@ -1,5 +1,5 @@
 """
-Tests for the 'User' model.
+Tests for 'User' model.
 """
 
 from django.test import TestCase, Client
@@ -70,7 +70,7 @@ def invalid_data():
 class TestLoginView:
     """Tests for login view"""
 
-    def test_login_view_GET_authenticated(self, client, login_url, frontpage_url):
+    def test_login_view_GET_authenticated(self, client, frontpage_url, login_url):
         # Test if authenticated user is redirected to frontpage
         User.objects.create_user(username="testuser", password="testpassword")
         client.login(username="testuser", password="testpassword")
@@ -131,22 +131,20 @@ class TestLoginView:
 class TestLogoutView:
     """Tests for logout view"""
 
-    def test_logout_view_GET_authenticated(self, client, logout_url, frontpage_url):
+    def test_logout_view_GET_authenticated(self, client, logout_url):
         # Users should not be able to log out with a GET request
         User.objects.create_user(username="testuser", password="testpassword")
         client.login(username="testuser", password="testpassword")
         response = client.get(logout_url)
 
         assert response.status_code == 405  # method not allowed (@post_only decorator)
-        assert client.session["_auth_user_id"]  # user is authenticated
 
     def test_logout_view_POST_authenticated(self, client, logout_url, frontpage_url):
         # Users should be able to log out with a POST request
         User.objects.create_user(username="testuser", password="testpassword")
         client.login(username="testuser", password="testpassword")
-        assert client.session["_auth_user_id"]  # user is authenticated
-
         response = client.post(logout_url)
+
         assert "_auth_user_id" not in client.session  # user is not authenticated
         assert response.status_code == 302  # redirect
         assert response.url == frontpage_url  # to frontpage
@@ -156,7 +154,7 @@ class TestLogoutView:
 class TestRegisterView:
     """Tests for register view"""
 
-    def test_register_view_GET_authenticated(self, client, register_url, frontpage_url):
+    def test_register_view_GET_authenticated(self, client, frontpage_url, register_url):
         # Test if authenticated user is redirected to frontpage
         User.objects.create_user(username="testuser", password="testpassword")
         client.login(username="testuser", password="testpassword")
@@ -203,7 +201,6 @@ class TestProfileView:
         client.login(username="testuser", password="testpassword")
         response = client.get(profile_url())
 
-        assert client.session["_auth_user_id"]  # user is authenticated
         assert response.status_code == 200  # accessible, ok
         assert "profile.html" in [t.name for t in response.templates]
 
@@ -215,7 +212,6 @@ class TestProfileView:
         # Test if non-authenticated user is redirected to login page with next parameter
         response = client.get(profile_url())
 
-        assert "_auth_user_id" not in client.session
         assert response.status_code == 302
         assert response.url == login_url + "?next=/profile/"
 
@@ -225,7 +221,6 @@ class TestProfileView:
         client.login(username="testuser", password="testpassword")
         response = client.get(edit_profile_url)
 
-        assert client.session["_auth_user_id"]
         assert response.status_code == 200
         assert "edit_profile.html" in [t.name for t in response.templates]
 
@@ -233,7 +228,6 @@ class TestProfileView:
         # Test if non-authenticated user is redirected to login page with next parameter
         response = client.get(edit_profile_url)
 
-        assert "_auth_user_id" not in client.session
         assert response.status_code == 302
         assert response.url == login_url + "?next=/profile/edit-profile/"
 

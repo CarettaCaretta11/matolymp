@@ -31,6 +31,7 @@ function vote(voteButton) {
             }
         }
     });
+
     let $voteDiv = $(voteButton).parent().parent();
     let $data = $voteDiv.data();
     let direction_name = $(voteButton).attr('title');
@@ -44,7 +45,6 @@ function vote(voteButton) {
     }
 
     let doPost = $.post('/blog/vote/', {
-        what: $data.whatType,
         what_id: $data.whatId,
         vote_value: vote_value,
     });
@@ -55,18 +55,13 @@ function vote(voteButton) {
             let $score = null;
             let $upvoteArrow = null;
             let $downArrow = null;
-            if ($data.whatType === 'submission') {
-                $score = $voteDiv.find("div.score");
-                $upvoteArrow = $voteDiv.children("div").children('i.fa.fa-chevron-up');
-                $downArrow = $voteDiv.children("div").children('i.fa.fa-chevron-down');
-            } else if ($data.whatType === 'comment') {
-                // let $medaiDiv = $voteDiv.parent().parent();
-                let $votes = $voteDiv.children('div');
-                $upvoteArrow = $votes.children('i.fa.fa-chevron-up');
-                $downArrow = $votes.children('i.fa.fa-chevron-down');
-                $score = $voteDiv.find("a.score:first");
 
-            }
+            // let $medaiDiv = $voteDiv.parent().parent();
+            let $votes = $voteDiv.children('div');
+            $upvoteArrow = $votes.children('i.fa.fa-chevron-up');
+            $downArrow = $votes.children('i.fa.fa-chevron-down');
+            $score = $voteDiv.find("a.score:first");
+
 
             // update vote elements
 

@@ -17,7 +17,8 @@ def get_item(dictionary, key):  # pragma: no cover
     """
     Needed because there's no built-in .get in django templates
     when working with dictionaries. Used for getting values from
-    comment_votes dictionary in comment.html template.
+    comment_votes dictionary in comment.html template using comment
+    IDs.
 
     :param dictionary: python dictionary
     :param key: valid dictionary key type
@@ -31,9 +32,8 @@ def frontpage(request):
     Serves frontpage and all additional submission listings
     with maximum of 25 submissions per page.
     """
-    # TODO: Serve user votes on submissions too.
 
-    all_submissions = Submission.objects.order_by("-score").all()
+    all_submissions = Submission.objects.order_by("-timestamp").all()
     paginator = Paginator(all_submissions, 25)
 
     page = request.GET.get("page", 1)
@@ -44,19 +44,7 @@ def frontpage(request):
     except EmptyPage:
         submissions = paginator.page(paginator.num_pages)
 
-    submission_votes = {}
-
-    if request.user.is_authenticated:
-        for submission in submissions:
-            try:
-                vote = Vote.objects.get(
-                    vote_object_type=submission.get_content_type(), vote_object_id=submission.id, user=request.user
-                )
-                submission_votes[submission.id] = vote.value
-            except Vote.DoesNotExist:
-                pass
-
-    return render(request, "frontpage.html", {"submissions": submissions, "submission_votes": submission_votes})
+    return render(request, "frontpage.html", {"submissions": submissions})
 
 
 def about(request):
@@ -67,6 +55,7 @@ def about(request):
     return render(request, "about.html")
 
 
+@login_required(login_url="/login/")
 def comments(request, thread_id=None):
     """
     Handles comment view when user opens the thread.
@@ -80,7 +69,6 @@ def comments(request, thread_id=None):
     """
 
     this_submission = get_object_or_404(Submission, id=thread_id)
-
     thread_comments = Comment.objects.filter(submission=this_submission)
 
     if request.user.is_authenticated:
@@ -91,22 +79,14 @@ def comments(request, thread_id=None):
     else:
         user = None
 
-    sub_vote_value = None
     comment_votes = {}
 
     if user:
         try:
-            vote = Vote.objects.get(
-                vote_object_type=this_submission.get_content_type(), vote_object_id=this_submission.id, user=user
-            )
-            sub_vote_value = vote.value
-        except Vote.DoesNotExist:
-            pass
-        try:
             user_thread_votes = Vote.objects.filter(user=user, submission=this_submission)
 
             for vote in user_thread_votes:
-                comment_votes[vote.vote_object.id] = vote.value
+                comment_votes[vote.comment.id] = vote.value # according to vote value, we change the color of arrows
         except:
             pass
 
@@ -117,7 +97,6 @@ def comments(request, thread_id=None):
             "submission": this_submission,
             "comments": thread_comments,
             "comment_votes": comment_votes,
-            "sub_vote": sub_vote_value,
         },
     )
 
@@ -129,12 +108,12 @@ def post_comment(request):
 
     parent_type = request.POST.get("parentType", None)
     parent_id = request.POST.get("parentId", None)
-    raw_comment = request.POST.get("commentContent", None)
+    content = request.POST.get("commentContent", None)
 
     if not all([parent_id, parent_type]) or parent_type not in ["comment", "submission"] or not parent_id.isdigit():
         return HttpResponseBadRequest()
 
-    if not raw_comment:
+    if not content:
         return JsonResponse({"msg": "You have to write something."})
     author = request.user
     parent_object = None
@@ -147,7 +126,7 @@ def post_comment(request):
     except (Comment.DoesNotExist, Submission.DoesNotExist):
         return HttpResponseBadRequest()
 
-    comment = Comment.create(author=author, content=raw_comment, parent=parent_object)
+    comment = Comment.create(author=author, content=content, parent=parent_object)
 
     comment.save()
     return JsonResponse({"msg": "Your comment has been posted."})
@@ -155,13 +134,9 @@ def post_comment(request):
 
 @post_only
 def vote(request):
-    # The type of object we're voting on, can be 'submission' or 'comment'
-    vote_object_type = request.POST.get("what", None)
-
-    # The ID of that object as it's stored in the database, positive int
     vote_object_id = request.POST.get("what_id", None)
 
-    # The value of the vote we're writing to that object, -1 or 1
+    # The value of the vote we're writing to the vote object (with id=vote_object_id), -1 or 1
     # Passing the same value twice will cancel the vote i.e. set it to 0
     new_vote_value = request.POST.get("vote_value", None)
 
@@ -184,36 +159,19 @@ def vote(request):
     except (ValueError, TypeError):
         return HttpResponseBadRequest()
 
-    # if one of the objects is None, 0 or some other bool(value) == False value
-    # or if the object type isn't 'comment' or 'submission' it's a bad request
-    if not all([vote_object_type, vote_object_id, new_vote_value]) or vote_object_type not in [
-        "comment",
-        "submission",
-    ]:
-        return HttpResponseBadRequest()
-
-    # Try and get the actual object we're voting on.
-    try:
-        if vote_object_type == "comment":
-            vote_object = Comment.objects.get(id=vote_object_id)
-
-        elif vote_object_type == "submission":
-            vote_object = Submission.objects.get(id=vote_object_id)
-        else:
-            return HttpResponseBadRequest()  # should never happen
-
-    except (Comment.DoesNotExist, Submission.DoesNotExist):
+    # if one of the objects is None, 0 or some other bool(value) == False value, it's a bad request
+    if not all([vote_object_id, new_vote_value]):
         return HttpResponseBadRequest()
 
     # Try and get the existing vote for this object, if it exists.
     try:
         vote = Vote.objects.get(
-            vote_object_type=vote_object.get_content_type(), vote_object_id=vote_object.id, user=user
+            comment=Comment.objects.get(id=vote_object_id), user=user
         )
 
     except Vote.DoesNotExist:
         # Create a new vote and that's it.
-        vote = Vote.create(user=user, vote_object=vote_object, vote_value=new_vote_value)
+        vote = Vote.create(user=user, comment=Comment.objects.get(id=vote_object_id), vote_value=new_vote_value)
         vote.save()
         vote_diff = new_vote_value
         return JsonResponse({"error": None, "voteDiff": vote_diff})
@@ -234,7 +192,7 @@ def vote(request):
     return JsonResponse({"error": None, "voteDiff": vote_diff})
 
 
-@login_required(login_url="/login")
+@login_required(login_url="/login/")
 def submit(request):
     """
     Handles new submission.

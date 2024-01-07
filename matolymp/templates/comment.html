@@ -5,7 +5,6 @@
     <div class="media">
         <div class="media-left">
             <div class="vote comment-votes"
-                 data-what-type="comment"
                  data-what-id="{{ node.id }}">
                 {% with vote_value=comment_votes|get_item:node.id %}
                     <div><i class="fa fa-chevron-up {% if vote_value == 1 %} upvoted {% endif %}"
@@ -19,8 +18,7 @@
             </div>
         </div>
         <div class="media-body" style="margin-top: 14px"
-             data-parent-id="{{ node.id }}"
-             data-parent-type="comment">
+             data-parent-id="{{ node.id }}">
             <h6 class="media-heading">
               <a {% if node.author %}href="{% url 'apps.user:user_profile' node.author_name %}"
                {% else %}href="#"{% endif %}>
