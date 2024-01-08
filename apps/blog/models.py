@@ -118,6 +118,12 @@ class Vote(models.Model):
         :rtype: Vote
         """
 
+        if cls.objects.filter(user=user, comment=comment).exists():
+            vote = cls.objects.get(user=user, comment=comment)
+            vote.value = vote_value
+            vote.save()
+            return vote
+
         vote = cls(user=user, comment=comment, value=vote_value)
         submission = comment.submission
         vote.submission = submission

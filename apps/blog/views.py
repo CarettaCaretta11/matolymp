@@ -56,7 +56,7 @@ def about(request):
 
 
 @login_required(login_url="/login/")
-def comments(request, thread_id=None):
+def comments(request, thread_id):
     """
     Handles comment view when user opens the thread.
     On top of serving all comments in the thread it will
@@ -151,17 +151,20 @@ def vote(request):
 
     try:  # If the vote value isn't an integer that's equal to -1 or 1
         # the request is bad and we can not continue.
+        if not (new_vote_value.isdigit() or (new_vote_value.startswith('-') and new_vote_value[1:].isdigit())):
+            raise ValueError("Not an integer value for the vote!")
+
         new_vote_value = int(new_vote_value)
 
         if new_vote_value not in [-1, 1]:
             raise ValueError("Wrong value for the vote!")
 
-    except (ValueError, TypeError):
-        return HttpResponseBadRequest()
+    except Exception as e:
+        return HttpResponseBadRequest("Wrong value for the vote!")
 
     # if one of the objects is None, 0 or some other bool(value) == False value, it's a bad request
     if not all([vote_object_id, new_vote_value]):
-        return HttpResponseBadRequest()
+        return HttpResponseBadRequest("Not all values were provided!")
 
     # Try and get the existing vote for this object, if it exists.
     try:
@@ -181,7 +184,7 @@ def vote(request):
     if vote.value == new_vote_value:
         # canceling vote
         vote_diff = vote.cancel_vote()
-        if not vote_diff:
+        if not vote_diff: # in case vote.vote_value is not -1 or 1 (potentially 0)
             return HttpResponseBadRequest("Something went wrong while canceling the vote")
     else:
         # changing vote

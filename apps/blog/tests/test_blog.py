@@ -11,6 +11,7 @@ from apps.blog.forms import SubmissionForm
 from apps.blog.models import Submission, Comment, Vote
 from apps.user.models import User
 
+import json
 import pytest
 
 
@@ -31,6 +32,11 @@ def frontpage_url():
 
 
 @pytest.fixture
+def post_comment_url():
+    return reverse("apps.blog:post_comment")
+
+
+@pytest.fixture
 def submissions():
     # note: object_id's are not always 1-30 since we delete submissions
     # and create new ones in other tests
@@ -40,6 +46,11 @@ def submissions():
 @pytest.fixture
 def submission_url():
     return reverse('apps.blog:submit')
+
+
+@pytest.fixture
+def vote_url():
+    return reverse('apps.blog:vote')
 
 
 @pytest.mark.django_db
@@ -127,13 +138,17 @@ class TestCommentsView:
         assert response.status_code == 404
         assert '404.html' in response.templates[0].name
 
-    def test_comments_GET_submission_with_comments(self, client, submissions):
+    def test_comments_GET_submission_with_comments_votes(self, client, submissions):
         user = User.objects.create_user(username="test_user", password="test_password")
         client.login(username="test_user", password="test_password")
         idx = random.randint(0, 29)
         submission_id = submissions[idx].id
         url = reverse('apps.blog:post', kwargs={'thread_id': submission_id})
-        Comment.objects.create(author=user, submission=submissions[idx], content="test comment")
+
+        cmt = Comment.create(author=user, content="test comment", parent=submissions[idx])
+        cmt.save()
+        vote = Vote.create(user=user, comment=cmt, vote_value=1)
+        vote.save()
 
         response = client.get(url)
         submission = response.context['submission']
@@ -141,28 +156,255 @@ class TestCommentsView:
         comment_votes = response.context['comment_votes']
 
         assert response.status_code == 200
-        assert 'submission' in response.context
-        assert 'comments' in response.context
-        assert 'comment_votes' in response.context
+        assert comment_votes == {cmt.id: 1}
         assert submission == submissions[idx]
         assert len(comments) == 1
+        assert comments[0] == cmt
         assert 'comments.html' in response.templates[0].name
+
+
+@pytest.mark.django_db
+class TestPostCommentView:
+    """Tests for post_comment view"""
+
+    def test_GET_request(self, client, post_comment_url):
+        response_get = client.get(post_comment_url)
+        assert response_get.status_code == 405  # HTTP 405 Method Not Allowed
+
+    def test_POST_authenticated(self, client, post_comment_url):
+        response = client.post(post_comment_url)
+        content = json.loads(response.content)
+        expected_message = "You need to log in to post new comments."
+
+        assert response.status_code == 200
+        assert content['msg'] == expected_message
+
+    def test_POST_authenticated_invalid_data(self, client, post_comment_url):
+        User.objects.create_user(username="test_user", password="test_password")
+        client.login(username="test_user", password="test_password")
+        submission = Submission.objects.create(title="test_submission")
+        invalid_data = [
+            {
+                'parentType': '',
+                'parentId': '',
+                'commentContent': ''
+            },
+            {
+                'parentType': 'test_type',
+                'parentId': submission.id,
+                'commentContent': 'test_content'
+            },
+            {
+                'parentType': 'comment',
+                'parentId': submission.id,
+                'commentContent': ''
+            },
+            {
+                'parentType': 'submission',
+                'parentId': 'not_an_integer',
+                'commentContent': 'test_content'
+            },
+            {
+                'parentType': 'submission',
+                'parentId': submission.id+1,
+                'commentContent': 'test_content'
+            }
+        ]
+
+        response = client.post(post_comment_url, invalid_data[0])
+        assert response.status_code == 400
+
+        response = client.post(post_comment_url, invalid_data[1])
+        assert response.status_code == 400
+
+        response = client.post(post_comment_url, invalid_data[2])
+        assert response.content == b'{"msg": "You have to write something."}'
+
+        response = client.post(post_comment_url, invalid_data[3])
+        assert response.status_code == 400
+
+        response = client.post(post_comment_url, invalid_data[4])
+        assert response.status_code == 400
+
+    def test_POST_authenticated_submission_parent(self, client, post_comment_url):
+        User.objects.create_user(username="test_user", password="test_password")
+        client.login(username="test_user", password="test_password")
+        submission = Submission.objects.create(title="test_submission")
+        valid_data = {
+            'parentType': 'submission',
+            'parentId': submission.id,
+            'commentContent': 'test_content'
+        }
+        response = client.post(post_comment_url, valid_data)
+        new_comment = Comment.objects.all().last()
+
+        assert response.status_code == 200
+        assert new_comment.author.username == 'test_user'
+        assert new_comment.submission == submission
+        assert new_comment.content == valid_data['commentContent']
+
+    def test_POST_authenticated_comment_parent(self, client, post_comment_url):
+        user = User.objects.create_user(username="test_user", password="test_password")
+        client.login(username="test_user", password="test_password")
+        submission = Submission.objects.create(title="test_submission")
+        comment = Comment.create(author=user, content="test_content", parent=submission)
+        comment.save()
+
+        valid_data = {
+            'parentType': 'comment',
+            'parentId': comment.id,
+            'commentContent': 'test_content'
+        }
+        response = client.post(post_comment_url, valid_data)
+        new_comment = Comment.objects.all().last()
+
+        assert response.status_code == 200
+        assert new_comment.author.username == 'test_user'
+        assert new_comment.parent == comment
+        assert new_comment.content == valid_data['commentContent']
+
+
+@pytest.mark.django_db
+class TestVoteCommentView:
+    """Tests for vote view"""
+
+    def test_GET_request(self, client, vote_url):
+        response_get = client.get(vote_url)
+        assert response_get.status_code == 405  # HTTP 405 Method Not Allowed
+
+    def test_vote_POST_not_authenticated(self, client, vote_url):
+        response = client.post(vote_url)
+        assert response.status_code == 403 # HTTP 403 Forbidden
+
+    def test_vote_POST_invalid_new_vote_value(self, client, vote_url):
+        User.objects.create_user(username="test_user", password="test_password")
+        client.login(username="test_user", password="test_password")
+
+        invalid_value = 0.5
+        response = client.post(vote_url, {'vote_value': invalid_value})
+        assert response.status_code == 400
+
+        non_convertible_value = "abc"
+        client.post(vote_url, {'vote_value': non_convertible_value})
+        assert response.status_code == 400
+
+        empty_value = ''
+        client.post(vote_url, {'vote_value': empty_value})
+        assert response.status_code == 400
+
+    def test_vote_POST_invalid_data(self, client, vote_url):
+        User.objects.create_user(username="test_user", password="test_password")
+        client.login(username="test_user", password="test_password")
+
+        response = client.post(vote_url, {'vote_value': 1})  # no what_id
+        assert response.status_code == 400
+        assert response.content == b"Not all values were provided!"
+
+        response = client.post(vote_url, {'what_id': 1})  # no vote_value
+        assert response.status_code == 400
+        assert response.content == b"Wrong value for the vote!"
+
+        response = client.post(vote_url)  # no data
+        assert response.status_code == 400
+        assert response.content == b"Wrong value for the vote!"
+
+    def test_vote_POST_new_vote(self, client, vote_url):
+        user = User.objects.create_user(username="test_user", password="test_password")
+        client.login(username="test_user", password="test_password")
+        submission = Submission.objects.create(title="test_submission")
+        cmt = Comment.create(author=user, content="test_content", parent=submission)
+        cmt.save()
+
+        response = client.post(vote_url, {'what_id': cmt.id, 'vote_value': 1})
+        assert Vote.objects.all().count() == 1  # new vote created
+        assert Vote.objects.all().last().user == user
+        assert Vote.objects.all().last().comment == cmt
+        assert Vote.objects.all().last().value == 1
+
+        response = client.post(vote_url, {'what_id': cmt.id, 'vote_value': -1})
+        assert Vote.objects.all().count() == 1  # new vote created
+        assert Vote.objects.all().last().user == user
+        assert Vote.objects.all().last().comment == cmt
+        assert Vote.objects.all().last().value == -1
+
+    def test_vote_POST_existing_vote(self, client, vote_url):
+        user = User.objects.create_user(username="test_user", password="test_password")
+        client.login(username="test_user", password="test_password")
+        submission = Submission.objects.create(title="test_submission")
+        cmt = Comment.create(author=user, content="test_content", parent=submission)
+        cmt.save()
+
+        vote = Vote.create(user=user, comment=cmt, vote_value=1)
+        vote.save()
+        response = client.post(vote_url, {'what_id': cmt.id, 'vote_value': 1})
+        content = json.loads(response.content)
+        assert content['voteDiff'] == -1
+
+        vote = Vote.create(user=user, comment=cmt, vote_value=1)
+        vote.save()
+        response = client.post(vote_url, {'what_id': cmt.id, 'vote_value': -1})
+        content = json.loads(response.content)
+        assert content['voteDiff'] == -2
+
+        vote = Vote.create(user=user, comment=cmt, vote_value=-1)
+        vote.save()
+        response = client.post(vote_url, {'what_id': cmt.id, 'vote_value': -1})
+        content = json.loads(response.content)
+        assert content['voteDiff'] == 1
+
+        vote = Vote.create(user=user, comment=cmt, vote_value=-1)
+        vote.save()
+        response = client.post(vote_url, {'what_id': cmt.id, 'vote_value': 1})
+        content = json.loads(response.content)
+        assert content['voteDiff'] == 2
+
+        vote = Vote.create(user=user, comment=cmt, vote_value=0)
+        vote.save()
+        response = client.post(vote_url, {'what_id': cmt.id, 'vote_value': 1})
+        content = json.loads(response.content)
+        assert content['voteDiff'] == 1
+
+        vote = Vote.create(user=user, comment=cmt, vote_value=0)
+        vote.save()
+        response = client.post(vote_url, {'what_id': cmt.id, 'vote_value': -1})
+        content = json.loads(response.content)
+        assert content['voteDiff'] == -1
+
+        # valid existing vote, invalid new vote
+        vote = Vote.create(user=user, comment=cmt, vote_value=0)
+        vote.save()
+        response = client.post(vote_url, {'what_id': cmt.id, 'vote_value': -1.5})
+        assert response.status_code == 400
+        assert response.content == b"Wrong value for the vote!"
+
+        # valid existing vote, invalid new vote
+        vote = Vote.create(user=user, comment=cmt, vote_value=0)
+        vote.save()
+        response = client.post(vote_url, {'what_id': cmt.id, 'vote_value': 1.5})
+        assert response.status_code == 400
+        assert response.content == b"Wrong value for the vote!"
+
+        # invalid existing vote (somehow), valid new vote
+        vote = Vote.create(user=user, comment=cmt, vote_value=5)
+        vote.save()
+        response = client.post(vote_url, {'what_id': cmt.id, 'vote_value': 1})
+        assert response.status_code == 400
+        assert response.content == b"Wrong values for old/new vote combination"
 
 
 @pytest.mark.django_db
 class TestSubmitView:
     """Tests for submit view"""
 
-    def test_submission_POST_not_authenticated(self, submission_url):
+    def test_submission_POST_not_authenticated(self, client, submission_url):
         pass
 
-    def test_submission_POST_authenticated_not_staff(self, submission_url):
+    def test_submission_POST_authenticated_not_staff(self, client, submission_url):
         pass
 
-    def test_submission_POST_staff_valid_data(self, submission_url):
+    def test_submission_POST_staff_valid_data(self, client, submission_url):
         pass
 
-    def test_submission_POST_staff_invalid_data(self, submission_url):
+    def test_submission_POST_staff_invalid_data(self, client, submission_url):
         pass
-
 
