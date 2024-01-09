@@ -1,5 +1,4 @@
 from django import forms
-from django.core.validators import RegexValidator
 
 from .models import Submission
 from .models import User

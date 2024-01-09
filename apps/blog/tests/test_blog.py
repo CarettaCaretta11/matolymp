@@ -11,6 +11,7 @@ from apps.blog.forms import SubmissionForm
 from apps.blog.models import Submission, Comment, Vote
 from apps.user.models import User
 
+
 import json
 import pytest
 
@@ -396,15 +397,119 @@ class TestVoteCommentView:
 class TestSubmitView:
     """Tests for submit view"""
 
-    def test_submission_POST_not_authenticated(self, client, submission_url):
-        pass
+    def test_submission_GET_not_authenticated(self, client, submission_url):
+        response = client.get(submission_url)
+        assert response.status_code == 302
+        assert response.url == '/login/?next=' + submission_url
 
-    def test_submission_POST_authenticated_not_staff(self, client, submission_url):
-        pass
+    def test_submission_GET_authenticated_not_staff(self, client, submission_url):
+        user = User.objects.create_user(username="test_user", password="test_password")
+        client.login(username="test_user", password="test_password")
+        response = client.get(submission_url)
+        assert response.status_code == 403
 
-    def test_submission_POST_staff_valid_data(self, client, submission_url):
-        pass
+    def test_submission_GET_authenticated_staff(self, client, submission_url):
+        user = User.objects.create_user(username="test_user", password="test_password",
+                                        is_staff=True)
+        client.login(username="test_user", password="test_password")
+        response = client.get(submission_url)
+        assert response.status_code == 200
+        assert response.templates[0].name == 'submit.html'
 
-    def test_submission_POST_staff_invalid_data(self, client, submission_url):
-        pass
+    def test_submission_POST_invalid_data(self, client, submission_url):
+        User.objects.create_user(username="test_user", password="test_password",
+                                    is_staff=True)
+        client.login(username="test_user", password="test_password")
+        invalid_data = [
+            {
+                'title': '',  # min_length=1 in Submission
+                'content': ''
+            },
+            {
+                'title': 'title'*51,  # max_length=250 in Submission
+                'content': 'test_content'
+            },
+            {
+                'title': 'test_title',
+                'content': 'test_content'*500  # max_length=5000 in Submission
+            }
+        ]
 
+        form = SubmissionForm(data=invalid_data[0])
+        assert not form.is_valid()
+        assert 'title' in form.errors
+        assert form.errors['title'][0] == 'This field is required.'
+        response = client.post(submission_url, invalid_data[0])
+        assert response.status_code == 200
+        assert response.templates[0].name == 'submit.html'
+        assert 'This field is required.' in response.content.decode('utf-8')
+
+        form = SubmissionForm(data=invalid_data[1])
+        assert not form.is_valid()
+        assert 'title' in form.errors
+        assert form.errors['title'][0] == 'Ensure this value has at most 250 characters (it has 255).'
+        response = client.post(submission_url, invalid_data[1])
+        assert response.status_code == 200
+        assert response.templates[0].name == 'submit.html'
+        assert 'Ensure this value has at most 250 characters (it has 255).' in response.content.decode('utf-8')
+
+        form = SubmissionForm(data=invalid_data[2])
+        assert not form.is_valid()
+        assert 'content' in form.errors
+        assert form.errors['content'][0] == 'Ensure this value has at most 5000 characters (it has 6000).'
+        response = client.post(submission_url, invalid_data[2])
+        assert response.status_code == 200
+        assert response.templates[0].name == 'submit.html'
+        assert 'Ensure this value has at most 5000 characters (it has 6000).' in response.content.decode('utf-8')
+
+    def test_submission_POST_valid_data(self, client, submission_url):
+        valid_data = [
+            {
+                'title': 'just_the_title',  # content is optional
+            },
+            {
+                'title': 'a',  # len(title) == 1
+                'content': 'test_content'
+            },
+            {
+                'title': 'test_title',
+                'content': 'test_content'
+            },
+            {
+                'title': 'test_title',
+                'content': 'content___'*500
+            },
+            {
+                'title': 'title' * 50,
+                'content': 'test_content'
+            },
+        ]
+
+        user = User.objects.create_user(username="test_user", password="test_password",
+                                        is_staff=True)
+        client.login(username="test_user", password="test_password")
+
+        response = client.post(submission_url, valid_data[0])
+        submission = Submission.objects.all().last()
+        assert response.status_code == 302
+        assert response.url == comments_url(submission.id)
+
+        response = client.post(submission_url, valid_data[1])
+        submission = Submission.objects.all().last()
+        assert response.status_code == 302
+        assert response.url == comments_url(submission.id)
+
+        response = client.post(submission_url, valid_data[2])
+        submission = Submission.objects.all().last()
+        assert response.status_code == 302
+        assert response.url == comments_url(submission.id)
+
+        response = client.post(submission_url, valid_data[3])
+        submission = Submission.objects.all().last()
+        assert response.status_code == 302
+        assert response.url == comments_url(submission.id)
+
+        response = client.post(submission_url, valid_data[4])
+        submission = Submission.objects.all().last()
+        assert response.status_code == 302
+        assert response.url == comments_url(submission.id)
