@@ -167,3 +167,11 @@ $('a[name="replyButton"]').click(function () {
     }
 
 });
+
+function confirmDelete() {
+    if (confirm("Are you sure you want to delete this post?")) {
+      document.getElementById("deleteForm").submit();
+    } else {
+      event.preventDefault();
+    }
+}

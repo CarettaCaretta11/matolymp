@@ -14,7 +14,6 @@ class SubmissionForm(forms.ModelForm):
 
     content = forms.CharField(
         widget=forms.Textarea(attrs={"class": "form-control", "rows": "3", "placeholder": "Optional text"}),
-        max_length=5000,
         required=False,
     )
 

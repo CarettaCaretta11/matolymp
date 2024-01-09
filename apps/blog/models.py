@@ -32,7 +32,7 @@ class Submission(ContentTypeAware, AuthornameField):
     _author_name = None
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     title = models.CharField(max_length=250)
-    content = models.TextField(max_length=5000, blank=True)
+    content = models.TextField(blank=True)
     timestamp = models.DateTimeField(default=timezone.now)
     comment_count = models.IntegerField(default=0)
 
@@ -139,7 +139,6 @@ class Vote(models.Model):
         comment.author.save()
 
         return vote
-
 
     def change_vote(self, new_vote_value):
         if self.value == -1 and new_vote_value == 1:  # down to up

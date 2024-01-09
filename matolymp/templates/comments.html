@@ -13,7 +13,7 @@
       <link rel="stylesheet" href="{% static "css/style.css" %}">
       <title>Post</title>
     </head>
-
+  
     <article class="media content-section" style="max-width: 800px;">
         <div style="position: relative">
             <div class="media-body">
@@ -25,12 +25,13 @@
                 </a>
                 <small class="text-muted">{{ submission.timestamp|date:"F d, Y" }}</small>
                 {% if submission.author == user %}
-                  <div>
-{#                    <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'post-update' submission.id %}">Update</a>#}
-                    <a class="btn btn-secondary btn-sm mt-1 mb-1" href="#">Update</a>
-{#                    <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'post-delete' submission.id %}">Delete</a>#}
-                    <a class="btn btn-danger btn-sm mt-1 mb-1" href="#">Delete</a>
-                  </div>
+                  <form id="deleteForm" action="{% url 'apps.blog:delete_post' submission.id %}" method="post">
+                    <div>
+                      <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'apps.blog:update_post' submission.id %}">Update</a>
+                      <button class="btn btn-danger btn-sm mt-1 mb-1" type="submit" onclick="confirmDelete()">Delete</button>
+                    </div>
+                  </form>
+
                 {% endif %}
               </div>
               <h2 class="article-title">{{ submission.title }}</h2>

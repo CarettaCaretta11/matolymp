@@ -259,8 +259,8 @@ class TestProfileView:
         response = client.post(edit_profile_url, invalid_edit_data)
         user.refresh_from_db()
         assert response.status_code == 200  # accessible, ok
-        assert response.templates[0].name == 'edit_profile.html'
-        assert 'Enter a valid email address.' in response.content.decode('utf-8')
+        assert response.templates[0].name == "edit_profile.html"
+        assert "Enter a valid email address." in response.content.decode("utf-8")
         assert user.first_name == "Kamran"
         assert user.email == "user@example.com"
 
@@ -268,8 +268,8 @@ class TestProfileView:
         response = client.post(edit_profile_url, invalid_edit_data)
         user.refresh_from_db()
         assert response.status_code == 200  # accessible, ok
-        assert response.templates[0].name == 'edit_profile.html'
-        assert 'Ensure this value has at most 500 characters (it has 600).' in response.content.decode('utf-8')
+        assert response.templates[0].name == "edit_profile.html"
+        assert "Ensure this value has at most 500 characters (it has 600)." in response.content.decode("utf-8")
         assert user.first_name == "Kamran"
         assert user.email == "user@example.com"
 

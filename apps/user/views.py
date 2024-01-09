@@ -12,7 +12,7 @@ from .models import User
 
 @login_required(login_url="/login/")
 def user_profile(request, username=None):
-    """ Handles user profile page. """
+    """Handles user profile page."""
     username = username or request.user.username
     user = get_object_or_404(User, username=username)
 
@@ -21,7 +21,7 @@ def user_profile(request, username=None):
 
 @login_required(login_url="/login/")
 def edit_profile(request):
-    """ Handles user profile editing. """
+    """Handles user profile editing."""
     user = request.user
 
     if request.method == "GET":

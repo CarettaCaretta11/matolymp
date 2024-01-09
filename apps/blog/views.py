@@ -79,6 +79,10 @@ def comments(request, thread_id):
     else:
         user = None
 
+    if user:
+        if request.method == "POST" and this_submission.author == user:
+            pass
+
     comment_votes = {}
 
     if user:
@@ -86,7 +90,7 @@ def comments(request, thread_id):
             user_thread_votes = Vote.objects.filter(user=user, submission=this_submission)
 
             for vote in user_thread_votes:
-                comment_votes[vote.comment.id] = vote.value # according to vote value, we change the color of arrows
+                comment_votes[vote.comment.id] = vote.value  # according to vote value, we change the color of arrows
         except:
             pass
 
@@ -151,7 +155,7 @@ def vote(request):
 
     try:  # If the vote value isn't an integer that's equal to -1 or 1
         # the request is bad and we can not continue.
-        if not (new_vote_value.isdigit() or (new_vote_value.startswith('-') and new_vote_value[1:].isdigit())):
+        if not (new_vote_value.isdigit() or (new_vote_value.startswith("-") and new_vote_value[1:].isdigit())):
             raise ValueError("Not an integer value for the vote!")
 
         new_vote_value = int(new_vote_value)
@@ -168,9 +172,7 @@ def vote(request):
 
     # Try and get the existing vote for this object, if it exists.
     try:
-        vote = Vote.objects.get(
-            comment=Comment.objects.get(id=vote_object_id), user=user
-        )
+        vote = Vote.objects.get(comment=Comment.objects.get(id=vote_object_id), user=user)
 
     except Vote.DoesNotExist:
         # Create a new vote and that's it.
@@ -184,7 +186,7 @@ def vote(request):
     if vote.value == new_vote_value:
         # canceling vote
         vote_diff = vote.cancel_vote()
-        if not vote_diff: # in case vote.vote_value is not -1 or 1 (potentially 0)
+        if not vote_diff:  # in case vote.vote_value is not -1 or 1 (potentially 0)
             return HttpResponseBadRequest("Something went wrong while canceling the vote")
     else:
         # changing vote
@@ -240,16 +242,16 @@ def update_submission(request, thread_id):
             messages.success(request, "Submission updated")
             return redirect("/blog/comments/{}".format(submission.id))
 
-    return render(request, "update_submission.html", {"form": submission_form})
+    return render(request, "update_submission.html", {"form": submission_form, "thread_id": thread_id})
 
 
 @login_required(login_url="/login/")
-def delete_submission(request, submission_id):
+def delete_submission(request, thread_id):
     """
     Handles deletion of submission.
     """
 
-    submission = get_object_or_404(Submission, id=submission_id)
+    submission = get_object_or_404(Submission, id=thread_id)
 
     if request.user != submission.author:
         return HttpResponseForbidden()

@@ -2,31 +2,18 @@
 
 {% block content %}
 
-    <form class="form-horizontal" action="{% url 'apps.blog:up' %}" method="post">
+    <form class="form-horizontal" action="{% url 'apps.blog:update_post' thread_id %}" method="post">
         {% csrf_token %}
         <fieldset>
-            <legend>Edit your profile</legend>
+            <legend>Edit this post</legend>
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for="first_name" class="col-lg-2 control-label">First Name</label>
+                        <label for="first_name" class="col-lg-2 control-label">Title</label>
 
                         <div class="col-lg-10">
-                            {{ form.first_name }}
-                            {% for error in form.first_name.errors %}
-                                <p class="text-danger">{{ error }}</p>
-                            {% endfor %}
-                        </div>
-
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="last_name" class="col-lg-2 control-label">Last Name</label>
-
-                        <div class="col-lg-10">
-                            {{ form.last_name }}
-                            {% for error in form.last_name.errors %}
+                            {{ form.title }}
+                            {% for error in form.title.errors %}
                                 <p class="text-danger">{{ error }}</p>
                             {% endfor %}
                         </div>
@@ -34,39 +21,22 @@
                     </div>
                 </div>
             </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="email" class="col-lg-2 control-label">Email</label>
-
-                        <div class="col-lg-10">
-                            {{ form.email }}
-                            {% for error in form.email.errors %}
-                                <p class="text-danger">{{ error }}</p>
-                            {% endfor %}
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        
+            
             <div class="form-group">
-                <label for="about_me" class="col-lg-2 control-label">About me</label>
+                <label for="about_me" class="col-lg-2 control-label">Content</label>
 
                 <div class="col-lg-10">
-                    {{ form.about_text }}
-                    {% for error in form.about_text.errors %}
+                    {{ form.content }}
+                    {% for error in form.content.errors %}
                         <p class="text-danger">{{ error }}</p>
                     {% endfor %}
-                    <span class="help-block">Up to 500 characters of about me text that will be displayed on your profile page.</span>
                 </div>
             </div>
         
             <div class="form-group">
                 <div class="col-lg-10 col-lg-offset-2">
                     <button type="submit" class="btn btn-primary">Save changes</button>
-                    <a class="btn btn-primary" href="{% url 'apps.user:user_profile' %}">View your profile</a>
+                    <a class="btn btn-primary" href="{% url 'apps.blog:post' thread_id %}">View your post</a>
                 </div>
             </div>
 
