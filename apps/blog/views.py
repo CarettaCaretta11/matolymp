@@ -254,11 +254,11 @@ def delete_submission(request, thread_id):
     submission = get_object_or_404(Submission, id=thread_id)
 
     if not request.user.is_authenticated:
-        return redirect('/login/?next=' + reverse('apps.blog:delete_post', args=(thread_id,)))
+        return redirect("/login/?next=" + reverse("apps.blog:delete_post", args=(thread_id,)))
 
     if request.user != submission.author:
         return HttpResponseForbidden()
 
     submission.delete()
     messages.success(request, "Submission deleted")
-    return redirect('frontpage')
+    return redirect("frontpage")

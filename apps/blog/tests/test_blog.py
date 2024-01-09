@@ -590,7 +590,7 @@ class TestDeleteSubmissionView:
         submission = submissions[0]
         response = client.post(delete_submission_url(submission.id))
         assert response.status_code == 302
-        assert response.url == '/login/?next=' + delete_submission_url(submission.id)
+        assert response.url == "/login/?next=" + delete_submission_url(submission.id)
 
     def test_delete_submission_POST_authenticated_not_author(self, client, submissions):
         user = User.objects.create_user(username="test_user", password="test_password")
