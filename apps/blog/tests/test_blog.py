@@ -1,7 +1,6 @@
 """
 Tests for 'Submission', 'Comment', and 'Vote' models.
 """
-import random
 
 from django.test import TestCase, Client
 from django.contrib.auth import authenticate
@@ -11,9 +10,9 @@ from apps.blog.forms import SubmissionForm
 from apps.blog.models import Submission, Comment, Vote
 from apps.user.models import User
 
-
 import json
 import pytest
+import random
 
 
 @pytest.fixture
@@ -25,6 +24,12 @@ def comments_url(thread_id=None):
     if thread_id:
         return reverse("apps.blog:post", kwargs={"thread_id": thread_id})
     return reverse("apps.blog:post")
+
+
+def edit_submission_url(submission_id=None):
+    if submission_id:
+        return reverse("apps.blog:update_post", kwargs={"submission_id": submission_id})
+    return reverse("apps.blog:update_post")
 
 
 @pytest.fixture
@@ -513,3 +518,107 @@ class TestSubmitView:
         submission = Submission.objects.all().last()
         assert response.status_code == 302
         assert response.url == comments_url(submission.id)
+
+
+# @pytest.mark.django_db
+# class TestUpdateSubmissionView:
+#     """Tests for update_submission view"""
+#
+#     def test_update_submission_GET_not_authenticated(self, client, submissions):
+#         idx = random.randint(0, len(submissions)-1)
+#         submission = submissions[idx]
+#         response = client.get(edit_submission_url(submission.id))
+#         assert response.status_code == 302
+#         assert response.url == '/login/?next=' + edit_submission_url(submission.id)
+#
+#     def test_update_submission_GET_authenticated_not_author(self, client, submissions):
+#         user = User.objects.create_user(username="test_user", password="test_password")
+#         client.login(username="test_user", password="test_password")
+#
+#         idx = random.randint(0, len(submissions)-1)
+#         submission = submissions[idx]
+#         response = client.get(reverse('apps.blog:update_submission', kwargs={'submission_id': submission.id}))
+#         assert response.status_code == 403
+#
+#     def test_update_submission_GET_authenticated_author(self, client, submissions):
+#         user = User.objects.create_user(username="test_user", password="test_password")
+#         client.login(username="test_user", password="test_password")
+#
+#         idx = random.randint(0, len(submissions)-1)
+#         submission = submissions[idx]
+#         response = client.get(reverse('apps.blog:update_submission', kwargs={'submission_id': submission.id}))
+#         assert response.status_code == 200
+#         assert response.templates[0].name == 'submit.html'
+#
+#     def test_update_submission_POST_not_authenticated(self, client, submissions):
+#         idx = random.randint(0, len(submissions)-1)
+#         submission = submissions[idx]
+#         response = client.post(reverse('apps.blog:update_submission', kwargs={'submission_id': submission.id}))
+#         assert response.status_code == 302
+#         assert response.url == '/login/?next=' + reverse('apps.blog:update_submission', kwargs={'submission_id': submission.id})
+#
+#     def test_update_submission_POST_authenticated_not_author(self, client, submissions):
+#         user = User.objects.create_user(username="test_user", password="test_password")
+#         client.login(username="test_user", password="test_password")
+#
+#         idx = random.randint(0, len(submissions)-1)
+#         submission = submissions[idx]
+#         response = client.post(reverse('apps.blog:update_submission', kwargs={'submission_id': submission.id}))
+#         assert response.status_code == 403
+#
+#     def test_update_submission_POST_authenticated_author_invalid_data(self, client, submissions):
+#         user = User.objects.create_user(username="test_user", password="test_password")
+#         client.login(username="test_user", password="test_password")
+#         assert Submission.objects.all().count() == 30
+#
+#
+# @pytest.mark.django_db
+# class TestDeleteSubmissionView:
+#     """Tests for delete_submission view"""
+#
+#         def test_delete_submission_GET_not_authenticated(self, client, submissions):
+#             idx = random.randint(0, len(submissions)-1)
+#             submission = submissions[idx]
+#             response = client.get(reverse('apps.blog:delete_submission', kwargs={'submission_id': submission.id}))
+#             assert response.status_code == 302
+#             assert response.url == '/login/?next=' + reverse('apps.blog:delete_submission', kwargs={'submission_id': submission.id})
+#
+#         def test_delete_submission_GET_authenticated_not_author(self, client, submissions):
+#             user = User.objects.create_user(username="test_user", password="test_password")
+#             client.login(username="test_user", password="test_password")
+#
+#             idx = random.randint(0, len(submissions)-1)
+#             submission = submissions[idx]
+#             response = client.get(reverse('apps.blog:delete_submission', kwargs={'submission_id': submission.id}))
+#             assert response.status_code == 403
+#
+#         def test_delete_submission_GET_authenticated_author(self, client, submissions):
+#             user = User.objects.create_user(username="test_user", password="test_password")
+#             client.login(username="test_user", password="test_password")
+#
+#             idx = random.randint(0, len(submissions)-1)
+#             submission = submissions[idx]
+#             response = client.get(reverse('apps.blog:delete_submission', kwargs={'submission_id': submission.id}))
+#             assert response.status_code == 200
+#             assert response.templates[0].name == 'delete_submission.html'
+#
+#         def test_delete_submission_POST_not_authenticated(self, client, submissions):
+#             idx = random.randint(0, len(submissions)-1)
+#             submission = submissions[idx]
+#             response = client.post(reverse('apps.blog:delete_submission', kwargs={'submission_id': submission.id}))
+#             assert response.status_code == 302
+#             assert response.url == '/login/?next=' + reverse('apps.blog:delete_submission', kwargs={'submission_id': submission.id})
+#
+#         def test_delete_submission_POST_authenticated_not_author(self, client, submissions):
+#             user = User.objects.create_user(username="test_user", password="test_password")
+#             client.login(username="test_user", password="test_password")
+#
+#             idx = random.randint(0, len(submissions)-1)
+#             submission = submissions[idx]
+#             response = client.post(reverse('apps.blog:delete_submission', kwargs={'submission_id': submission.id}))
+#             assert response.status_code == 403
+#
+#         def test_delete_submission_POST_authenticated_author(self, client, submissions):
+#             user = User.objects.create_user(username="test_user", password="test_password")
+#             client.login(username="test_user", password="test_password")
+

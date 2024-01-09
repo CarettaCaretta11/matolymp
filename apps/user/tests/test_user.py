@@ -254,13 +254,22 @@ class TestProfileView:
             username="testuser", password="testpassword", first_name="Kamran", email="user@example.com"
         )
         client.login(username="testuser", password="testpassword")
+
         invalid_edit_data = {"first_name": "Rustam", "email": "updated.com"}
         response = client.post(edit_profile_url, invalid_edit_data)
-
-        # Refresh user instance from the database to reflect changes
         user.refresh_from_db()
-
         assert response.status_code == 200  # accessible, ok
+        assert response.templates[0].name == 'edit_profile.html'
+        assert 'Enter a valid email address.' in response.content.decode('utf-8')
+        assert user.first_name == "Kamran"
+        assert user.email == "user@example.com"
+
+        invalid_edit_data = {"first_name": "Rustam", "about_text": "test" * 150}  # too long
+        response = client.post(edit_profile_url, invalid_edit_data)
+        user.refresh_from_db()
+        assert response.status_code == 200  # accessible, ok
+        assert response.templates[0].name == 'edit_profile.html'
+        assert 'Ensure this value has at most 500 characters (it has 600).' in response.content.decode('utf-8')
         assert user.first_name == "Kamran"
         assert user.email == "user@example.com"
 

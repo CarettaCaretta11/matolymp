@@ -79,8 +79,6 @@ class UserUpdateForm(forms.ModelForm):
         widget=forms.TextInput(
             attrs={"class": "form-control", "id": "first_name", "placeholder": "first name (optional)", "type": "text"}
         ),
-        min_length=1,
-        max_length=12,
         required=False,
     )
 
@@ -88,8 +86,6 @@ class UserUpdateForm(forms.ModelForm):
         widget=forms.TextInput(
             attrs={"class": "form-control", "id": "last_name", "placeholder": "last name (optional)", "type": "text"}
         ),
-        min_length=1,
-        max_length=12,
         required=False,
     )
 

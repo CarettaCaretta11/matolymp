@@ -217,3 +217,43 @@ def submit(request):
             return redirect("/blog/comments/{}".format(submission.id))
 
     return render(request, "submit.html", {"form": submission_form})
+
+
+@login_required(login_url="/login/")
+def update_submission(request, thread_id):
+    """
+    Handles update of submission.
+    """
+
+    submission = get_object_or_404(Submission, id=thread_id)
+
+    if request.user != submission.author:
+        return HttpResponseForbidden()
+
+    submission_form = SubmissionForm(instance=submission)
+
+    if request.method == "POST":
+        submission_form = SubmissionForm(request.POST, instance=submission)
+        if submission_form.is_valid():
+            submission = submission_form.save(commit=False)
+            submission.save()
+            messages.success(request, "Submission updated")
+            return redirect("/blog/comments/{}".format(submission.id))
+
+    return render(request, "update_submission.html", {"form": submission_form})
+
+
+@login_required(login_url="/login/")
+def delete_submission(request, submission_id):
+    """
+    Handles deletion of submission.
+    """
+
+    submission = get_object_or_404(Submission, id=submission_id)
+
+    if request.user != submission.author:
+        return HttpResponseForbidden()
+
+    submission.delete()
+    messages.success(request, "Submission deleted")
+    return redirect("/")
