@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse, HttpResponseBadRequest, Http404, HttpResponseForbidden, HttpResponse
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.template.defaulttags import register
 
 from .forms import SubmissionForm
@@ -245,7 +245,7 @@ def update_submission(request, thread_id):
     return render(request, "update_submission.html", {"form": submission_form, "thread_id": thread_id})
 
 
-@login_required(login_url="/login/")
+@post_only
 def delete_submission(request, thread_id):
     """
     Handles deletion of submission.
@@ -253,9 +253,12 @@ def delete_submission(request, thread_id):
 
     submission = get_object_or_404(Submission, id=thread_id)
 
+    if not request.user.is_authenticated:
+        return redirect('/login/?next=' + reverse('apps.blog:delete_post', args=(thread_id,)))
+
     if request.user != submission.author:
         return HttpResponseForbidden()
 
     submission.delete()
     messages.success(request, "Submission deleted")
-    return redirect("/")
+    return redirect('frontpage')
