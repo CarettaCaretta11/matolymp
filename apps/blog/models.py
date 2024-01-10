@@ -1,10 +1,11 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
 from .utils.model_utils import ContentTypeAware, MttpContentTypeAware
 from apps.user.models import User
+
+from django.utils import timezone
 
 
 class AuthornameField:
@@ -29,16 +30,29 @@ class AuthornameField:
 
 
 class Submission(ContentTypeAware, AuthornameField):
-    _author_name = None
+    _updated = None
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     title = models.CharField(max_length=250)
     content = models.TextField(blank=True)
-    timestamp = models.DateTimeField(default=timezone.now)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    modified = models.BooleanField(default=False)
     comment_count = models.IntegerField(default=0)
 
     @property
     def comments_url(self):
         return "/blog/comments/{}".format(self.id)
+
+    @property
+    def updated(self):
+        return self._updated
+
+    @updated.setter
+    def updated(self, value):
+        self._updated = value
+
+    @updated.deleter
+    def updated(self):
+        del self._updated
 
     def __unicode__(self):
         return "<Submission:{}>".format(self.id)
@@ -50,7 +64,7 @@ class Comment(MttpContentTypeAware, AuthornameField):
     parent = TreeForeignKey(
         "self", on_delete=models.SET_NULL, related_name="children", null=True, blank=True, db_index=True
     )
-    timestamp = models.DateTimeField(default=timezone.now)
+    timestamp = models.DateTimeField(auto_now_add=True)
     ups = models.IntegerField(default=0)
     downs = models.IntegerField(default=0)
     score = models.IntegerField(default=0)

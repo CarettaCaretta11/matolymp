@@ -13,7 +13,7 @@
       <link rel="stylesheet" href="{% static "css/style.css" %}">
       <title>Post</title>
     </head>
-  
+
     <article class="media content-section" style="max-width: 800px;">
         <div style="position: relative">
             <div class="media-body">
@@ -23,7 +23,7 @@
                    {% else %}href="#"{% endif %}>
                   {{ submission.author_name }}
                 </a>
-                <small class="text-muted">{{ submission.timestamp|date:"F d, Y" }}</small>
+                <small class="text-muted">{{ submission.timestamp|date:"F d, Y" }} {% if submission.modified %}(Updated {{ submission|get_obj_attr:"updated" }}){% endif %}</small>
                 {% if submission.author == user %}
                   <form id="deleteForm" action="{% url 'apps.blog:delete_post' submission.id %}" method="post">
                     <div>

@@ -14,7 +14,7 @@ class CommentsInline(admin.StackedInline):
 
 
 class SubmissionAdmin(admin.ModelAdmin):
-    list_display = ("title", "content", "author")
+    list_display = ("title", "content", "author", "timestamp", "updated", "comment_count")
     inlines = [CommentsInline]
 
 

@@ -5,6 +5,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse, HttpResponseBadRequest, Http404, HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.template.defaulttags import register
+from django.utils import timezone
 
 from .forms import SubmissionForm
 from .models import Submission, Comment, Vote
@@ -25,6 +26,11 @@ def get_item(dictionary, key):  # pragma: no cover
     :return: value of that key or None
     """
     return dictionary.get(key)
+
+
+@register.filter
+def get_obj_attr(obj, attr):
+    return getattr(obj, attr)
 
 
 def frontpage(request):
@@ -70,7 +76,9 @@ def comments(request, thread_id):
 
     this_submission = get_object_or_404(Submission, id=thread_id)
     thread_comments = Comment.objects.filter(submission=this_submission)
-
+    print(
+        f"\n\nthis_submission.modified = {this_submission.modified}\n\nthis_submission.updated = {this_submission.updated}\n\n"
+    )
     if request.user.is_authenticated:
         try:
             user = request.user
@@ -238,6 +246,8 @@ def update_submission(request, thread_id):
         submission_form = SubmissionForm(request.POST, instance=submission)
         if submission_form.is_valid():
             submission = submission_form.save(commit=False)
+            submission.modified = True
+            submission.updated = timezone.now()
             submission.save()
             messages.success(request, "Submission updated")
             return redirect("/blog/comments/{}".format(submission.id))
