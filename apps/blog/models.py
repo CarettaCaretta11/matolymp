@@ -30,29 +30,17 @@ class AuthornameField:
 
 
 class Submission(ContentTypeAware, AuthornameField):
-    _updated = None
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     title = models.CharField(max_length=250)
     content = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     modified = models.BooleanField(default=False)
+    updated = models.DateTimeField(null=True, blank=True)
     comment_count = models.IntegerField(default=0)
 
     @property
     def comments_url(self):
         return "/blog/comments/{}".format(self.id)
-
-    @property
-    def updated(self):
-        return self._updated
-
-    @updated.setter
-    def updated(self, value):
-        self._updated = value
-
-    @updated.deleter
-    def updated(self):
-        del self._updated
 
     def __unicode__(self):
         return "<Submission:{}>".format(self.id)
