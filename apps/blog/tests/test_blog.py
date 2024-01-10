@@ -548,6 +548,8 @@ class TestUpdateSubmissionView:
         assert response.url == comments_url(submission.id)
         assert submission.title == valid_data[0]["title"]
         assert submission.content == ""
+        assert submission.modified
+        assert submission.updated
 
         response = client.post(edit_submission_url(submission.id), valid_data[1])
         submission.refresh_from_db()
@@ -555,6 +557,8 @@ class TestUpdateSubmissionView:
         assert response.url == comments_url(submission.id)
         assert submission.title == valid_data[1]["title"]
         assert submission.content == valid_data[1]["content"]
+        assert submission.modified
+        assert submission.updated
 
         response = client.post(edit_submission_url(submission.id), valid_data[2])
         submission.refresh_from_db()
@@ -562,6 +566,8 @@ class TestUpdateSubmissionView:
         assert response.url == comments_url(submission.id)
         assert submission.title == valid_data[2]["title"]
         assert submission.content == valid_data[2]["content"]
+        assert submission.modified
+        assert submission.updated
 
         response = client.post(edit_submission_url(submission.id), valid_data[3])
         submission.refresh_from_db()
@@ -569,6 +575,8 @@ class TestUpdateSubmissionView:
         assert response.url == comments_url(submission.id)
         assert submission.title == valid_data[3]["title"]
         assert submission.content == valid_data[3]["content"]
+        assert submission.modified
+        assert submission.updated
 
 
 @pytest.mark.django_db
