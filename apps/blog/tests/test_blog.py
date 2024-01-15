@@ -276,17 +276,18 @@ class TestVoteCommentView:
 
         response = client.post(vote_url, {"what_id": 1})  # no vote_value
         assert response.status_code == 400
-        assert response.content == b"Wrong value for the vote!"
+        assert response.content == b"Not all values were provided!"
 
         response = client.post(vote_url)  # no data
         assert response.status_code == 400
-        assert response.content == b"Wrong value for the vote!"
+        assert response.content == b"Not all values were provided!"
 
     def test_vote_POST_new_vote(self, client, submissions, vote_url):
         user = User.objects.create_user(username="test_user", password="test_password")
+        comment_user = User.objects.create_user(username="test_comment_user", password="test_password")
         client.login(username="test_user", password="test_password")
         submission = submissions[0]
-        cmt = Comment.create(author=user, content="test_content", parent=submission)
+        cmt = Comment.create(author=comment_user, content="test_content", parent=submission)
         cmt.save()
 
         response = client.post(vote_url, {"what_id": cmt.id, "vote_value": 1})
@@ -303,9 +304,10 @@ class TestVoteCommentView:
 
     def test_vote_POST_existing_vote(self, client, submissions, vote_url):
         user = User.objects.create_user(username="test_user", password="test_password")
+        comment_user = User.objects.create_user(username="test_comment_user", password="test_password")
         client.login(username="test_user", password="test_password")
         submission = submissions[0]
-        cmt = Comment.create(author=user, content="test_content", parent=submission)
+        cmt = Comment.create(author=comment_user, content="test_content", parent=submission)
         cmt.save()
 
         vote = Vote.create(user=user, comment=cmt, vote_value=1)

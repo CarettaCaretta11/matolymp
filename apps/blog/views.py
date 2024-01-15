@@ -161,8 +161,12 @@ def vote(request):
     else:
         user = request.user
 
+    # if one of the objects is None, 0 or some other bool(value) == False value, it's a bad request
+    if not all([vote_object_id, new_vote_value]):
+        return HttpResponseBadRequest("Not all values were provided!")
+
     comment = Comment.objects.get(id=vote_object_id)
-    if request.user == comment.user:
+    if request.user == comment.author:
         return JsonResponse({"error": None, "voteDiff": 0})
 
     try:  # If the vote value isn't an integer that's equal to -1 or 1
@@ -177,10 +181,6 @@ def vote(request):
 
     except Exception as e:
         return HttpResponseBadRequest("Wrong value for the vote!")
-
-    # if one of the objects is None, 0 or some other bool(value) == False value, it's a bad request
-    if not all([vote_object_id, new_vote_value]):
-        return HttpResponseBadRequest("Not all values were provided!")
 
     # Try and get the existing vote for this object, if it exists.
     try:
