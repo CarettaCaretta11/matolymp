@@ -27,7 +27,7 @@ django.setup()
 # -- Project information -----------------------------------------------------
 
 project = "matolymp"
-copyright = """2023, Kamran Mehtiyev"""
+copyright = """2024, Kamran Mehtiyev"""
 author = "Kamran Mehtiyev"
 
 

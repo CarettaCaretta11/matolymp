@@ -234,10 +234,10 @@ class TestProfileView:
     def test_edit_profile_view_POST_valid_data(self, client, edit_profile_url):
         # Test editing profile with valid data
         user = User.objects.create_user(
-            username="testuser", password="testpassword", first_name="Rustam", email="user@example.com"
+            username="testuser", password="testpassword", first_name="Lebron", email="user@example.com"
         )
         client.login(username="testuser", password="testpassword")
-        valid_edit_data = {"first_name": "Kamran", "email": "updated@example.com"}
+        valid_edit_data = {"first_name": "Michael", "email": "updated@example.com"}
         response = client.post(edit_profile_url, valid_edit_data)
 
         # Refresh user instance from the database to reflect changes
@@ -245,47 +245,47 @@ class TestProfileView:
 
         assert response.status_code == 302  # redirect
         assert response.url == profile_url()  # to profile page
-        assert user.first_name == "Kamran"
+        assert user.first_name == "Michael"
         assert user.email == "updated@example.com"
 
     def test_edit_profile_view_POST_invalid_data(self, client, edit_profile_url):
         # Test editing profile with invalid data
         user = User.objects.create_user(
-            username="testuser", password="testpassword", first_name="Kamran", email="user@example.com"
+            username="testuser", password="testpassword", first_name="Michael", email="user@example.com"
         )
         client.login(username="testuser", password="testpassword")
 
-        invalid_edit_data = {"first_name": "Rustam", "email": "updated.com"}
+        invalid_edit_data = {"first_name": "Lebron", "email": "updated.com"}
         response = client.post(edit_profile_url, invalid_edit_data)
         user.refresh_from_db()
         assert response.status_code == 200  # accessible, ok
         assert response.templates[0].name == "edit_profile.html"
         assert "Enter a valid email address." in response.content.decode("utf-8")
-        assert user.first_name == "Kamran"
+        assert user.first_name == "Michael"
         assert user.email == "user@example.com"
 
-        invalid_edit_data = {"first_name": "Rustam", "about_text": "test" * 150}  # too long
+        invalid_edit_data = {"first_name": "Lebron", "about_text": "test" * 150}  # too long
         response = client.post(edit_profile_url, invalid_edit_data)
         user.refresh_from_db()
         assert response.status_code == 200  # accessible, ok
         assert response.templates[0].name == "edit_profile.html"
         assert "Ensure this value has at most 500 characters (it has 600)." in response.content.decode("utf-8")
-        assert user.first_name == "Kamran"
+        assert user.first_name == "Michael"
         assert user.email == "user@example.com"
 
     def test_edit_profile_view_POST_duplicate_email(self, client, edit_profile_url):
         # Test editing profile with duplicate email
         user1 = User.objects.create_user(
-            username="testuser1", password="testpassword", first_name="Rustam", email="user1@example.com"
+            username="testuser1", password="testpassword", first_name="Lebron", email="user1@example.com"
         )
         user2 = User.objects.create_user(
-            username="testuser2", password="testpassword", first_name="Kamran", email="user2@example.com"
+            username="testuser2", password="testpassword", first_name="Michael", email="user2@example.com"
         )
         client.login(username="testuser1", password="testpassword")
-        invalid_edit_data = {"first_name": "Rustam", "email": "user2@example.com"}
+        invalid_edit_data = {"first_name": "Lebron", "email": "user2@example.com"}
         response = client.post(edit_profile_url, invalid_edit_data)
 
         user1.refresh_from_db()
 
-        assert user1.first_name == "Rustam"
+        assert user1.first_name == "Lebron"
         assert user1.email == "user1@example.com"
