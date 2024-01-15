@@ -161,6 +161,10 @@ def vote(request):
     else:
         user = request.user
 
+    comment = Comment.objects.get(id=vote_object_id)
+    if request.user == comment.user:
+        return JsonResponse({"error": None, "voteDiff": 0})
+
     try:  # If the vote value isn't an integer that's equal to -1 or 1
         # the request is bad and we can not continue.
         if not (new_vote_value.isdigit() or (new_vote_value.startswith("-") and new_vote_value[1:].isdigit())):

@@ -84,6 +84,13 @@ function vote(voteButton) {
                 } else {                                // adding new upvote
                     $upvoteArrow.addClass("upvoted")
                 }
+            } else if (vote_value === 0) {               // voting yourself (that's a no-no)
+                if ($upvoteArrow.hasClass("upvoted")) {
+                    $upvoteArrow.removeClass("upvoted")
+                }
+                if ($downArrow.hasClass("downvoted")) {
+                    $downArrow.removeClass("downvoted")
+                }
             }
 
             // update score element
