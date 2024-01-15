@@ -6,6 +6,4 @@ Making olympiad mathematics more accessible!
 [![Black code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 [![CI](https://github.com/CarettaCaretta11/matolymp/actions/workflows/ci.yml/badge.svg)](https://github.com/CarettaCaretta11/matolymp/actions/workflows/ci.yml)
 
-License: MIT
-
-Necessary information and instructions will be added later.
+All necessary information and instructions will be added later.
