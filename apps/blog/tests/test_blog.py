@@ -266,6 +266,19 @@ class TestVoteCommentView:
         client.post(vote_url, {"vote_value": empty_value})
         assert response.status_code == 400
 
+    def test_vote_POST_own_comment(self, client, submissions, vote_url):
+        user = User.objects.create_user(username="test_user", password="test_password")
+        client.login(username="test_user", password="test_password")
+        submission = submissions[0]
+        cmt = Comment.create(author=user, content="test_content", parent=submission)
+        cmt.save()
+
+        response = client.post(vote_url, {"what_id": cmt.id, "vote_value": 1})
+        cmt.refresh_from_db()
+        assert cmt.score == 0
+        assert cmt.ups == 0
+        assert cmt.downs == 0
+
     def test_vote_POST_invalid_data(self, client, vote_url):
         User.objects.create_user(username="test_user", password="test_password")
         client.login(username="test_user", password="test_password")

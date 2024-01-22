@@ -167,7 +167,7 @@ def vote(request):
 
     comment = Comment.objects.get(id=vote_object_id)
     if request.user == comment.author:
-        return JsonResponse({"error": None, "voteDiff": 0})
+        return JsonResponse({"error": "error"})  # Can't vote on your own comment
 
     try:  # If the vote value isn't an integer that's equal to -1 or 1
         # the request is bad and we can not continue.
